@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Dashboard Antrean Wawancara Orang Tua</title>
+
+  <!-- SUPABASE -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+
+    body {
+
+      margin: 0;
+
+      min-height: 100vh;
+
+      font-family: Arial, sans-serif;
+
+      background: #f5f5f5;
+
+      padding: 20px;
+
+    }
+
+
+    .container {
+
+      width: 100%;
+
+      max-width: 700px;
+
+      margin: auto;
+
+      background: white;
+
+      border-radius: 20px;
+
+      overflow: hidden;
+
+      box-shadow:
+        0 10px 30px rgba(0,0,0,0.15);
+
+    }
+
+
+    /* =========================
+       HEADER
+    ========================= */
+
+    .header {
+
+      background: #087443;
+
+      color: white;
+
+      text-align: center;
+
+      padding: 30px 20px;
+
+      border-bottom: 5px solid #d6b447;
+
+    }
+
+
+    .header h1 {
+
+      margin: 0;
+
+      font-size: 25px;
+
+    }
+
+
+    .header p {
+
+      margin: 10px 0 0;
+
+      color: #f5d96b;
+
+      font-size: 14px;
+
+    }
+
+
+    /* =========================
+       CONTENT
+    ========================= */
+
+    .content {
+
+      padding: 30px;
+
+    }
+
+
+    h2 {
+
+      text-align: center;
+
+      color: #087443;
+
+      margin-top: 0;
+
+      margin-bottom: 25px;
+
+    }
+
+
+    /* =========================
+       INFO
+    ========================= */
+
+    .info {
+
+      display: flex;
+
+      justify-content: space-between;
+
+      align-items: center;
+
+      padding: 15px;
+
+      margin-bottom: 20px;
+
+      background: #fffdf0;
+
+      border: 1px solid #d6b447;
+
+      border-radius: 12px;
+
+      color: #333;
+
+    }
+
+
+    .jumlah {
+
+      font-size: 18px;
+
+      font-weight: bold;
+
+      color: #087443;
+
+    }
+
+
+    .refresh {
+
+      width: auto;
+
+      padding: 10px 15px;
+
+      background: #087443;
+
+      color: white;
+
+      border: none;
+
+      border-radius: 8px;
+
+      font-weight: bold;
+
+      cursor: pointer;
+
+    }
+
+
+    .refresh:hover {
+
+      background: #065c35;
+
+    }
+
+
+    /* =========================
+       DAFTAR ANTREAN
+    ========================= */
+
+    .daftar {
+
+      display: flex;
+
+      flex-direction: column;
+
+      gap: 12px;
+
+    }
+
+
+    .item {
+
+      display: flex;
+
+      align-items: center;
+
+      gap: 15px;
+
+      padding: 15px;
+
+      border: 1px solid #ddd;
+
+      border-radius: 12px;
+
+      background: white;
+
+    }
+
+
+    .nomor {
+
+      min-width: 65px;
+
+      font-size: 25px;
+
+      font-weight: bold;
+
+      color: #087443;
+
+    }
+
+
+    .nama {
+
+      flex: 1;
+
+      font-size: 16px;
+
+      font-weight: bold;
+
+      color: #333;
+
+    }
+
+
+    .status {
+
+      margin-top: 5px;
+
+      font-size: 13px;
+
+      font-weight: normal;
+
+      color: #777;
+
+    }
+
+
+    /* =========================
+       BUTTON PANGGIL
+    ========================= */
+
+    .btn-panggil {
+
+      width: auto;
+
+      padding: 10px 15px;
+
+      background: #d6b447;
+
+      color: #333;
+
+      border: none;
+
+      border-radius: 8px;
+
+      font-weight: bold;
+
+      cursor: pointer;
+
+    }
+
+
+    .btn-panggil:hover {
+
+      background: #c3a13d;
+
+    }
+
+
+    /* =========================
+       SAAT DIPANGGIL
+    ========================= */
+
+    .item.dipanggil {
+
+      background: #fffdf0;
+
+      border-color: #d6b447;
+
+    }
+
+
+    .item.dipanggil .status {
+
+      color: #9a7c18;
+
+      font-weight: bold;
+
+    }
+
+
+    .btn-selesai {
+
+      width: auto;
+
+      padding: 10px 15px;
+
+      background: #087443;
+
+      color: white;
+
+      border: none;
+
+      border-radius: 8px;
+
+      font-weight: bold;
+
+      cursor: pointer;
+
+    }
+
+
+    /* =========================
+       SELESAI
+    ========================= */
+
+    .item.selesai {
+
+      opacity: 0.55;
+
+      background: #f5f5f5;
+
+    }
+
+
+    .item.selesai .status {
+
+      color: #087443;
+
+      font-weight: bold;
+
+    }
+
+
+    .btn-selesai:disabled {
+
+      background: #ccc;
+
+      color: #666;
+
+      cursor: not-allowed;
+
+    }
+
+
+    /* =========================
+       KOSONG / LOADING
+    ========================= */
+
+    .kosong {
+
+      text-align: center;
+
+      padding: 30px;
+
+      color: #777;
+
+    }
+
+
+    /* =========================
+       RESPONSIVE
+    ========================= */
+
+    @media (max-width: 600px) {
+
+      .content {
+
+        padding: 20px;
+
+      }
+
+
+      .item {
+
+        flex-wrap: wrap;
+
+      }
+
+
+      .btn-panggil,
+
+      .btn-selesai {
+
+        width: 100%;
+
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+<div class="container">
+
+
+  <!-- =========================
+       HEADER
+  ========================= -->
+
+  <div class="header">
+
+    <h1>
+      DASHBOARD ANTREAN WAWANCARA
+    </h1>
+
+    <p>
+      Fakultas Kedokteran UIN Sunan Kalijaga Yogyakarta
+    </p>
+
+  </div>
+
+
+
+  <div class="content">
+
+
+    <h2>
+
+      Daftar Antrean Orang Tua
+
+    </h2>
+
+
+
+    <!-- =========================
+         INFO
+    ========================= -->
+
+    <div class="info">
+
+      <div>
+
+        Total antrean:
+
+        <span
+          class="jumlah"
+          id="jumlah"
+        >
+
+          0
+
+        </span>
+
+      </div>
+
+
+      <button
+        class="refresh"
+        onclick="ambilData()"
+      >
+
+        🔄 REFRESH
+
+      </button>
+
+    </div>
+
+
+
+    <!-- =========================
+         DAFTAR
+    ========================= -->
+
+    <div
+      class="daftar"
+      id="daftar"
+    >
+
+      <div class="kosong">
+
+        Memuat data antrean...
+
+      </div>
+
+    </div>
+
+
+  </div>
+
+
+</div>
+
+
+
+<script>
+
+
+  // ==========================================
+  // SUPABASE
+  // ==========================================
+
+
+  const SUPABASE_URL =
+
+    "https://drseschhiwzgwjfzcvsw.supabase.co";
+
+
+  const SUPABASE_KEY =
+
+    "sb_publishable_vm34omqwLMjPIeOvdrttEA_ZfvzKcPN";
+
+
+  const supabaseClient =
+
+    supabase.createClient(
+
+      SUPABASE_URL,
+
+      SUPABASE_KEY
+
+    );
+
+
+
+  // ==========================================
+  // AMBIL DATA ANTREAN
+  // ==========================================
+
+
+  async function ambilData() {
+
+
+    const daftar =
+
+      document.getElementById(
+
+        "daftar"
+
+      );
+
+
+    daftar.innerHTML =
+
+      '<div class="kosong">' +
+
+      'Memuat data antrean...' +
+
+      '</div>';
+
+
+
+    try {
+
+
+      const {
+
+        data,
+
+        error
+
+      } = await supabaseClient
+
+
+        .from("antrian")
+
+
+        .select("*")
+
+
+        .order(
+
+          "nomor",
+
+          {
+
+            ascending: true
+
+          }
+
+        );
+
+
+
+      if (error) {
+
+        throw error;
+
+      }
+
+
+
+      // Jumlah antrean
+
+      document.getElementById(
+
+        "jumlah"
+
+      ).textContent =
+
+        data.length;
+
+
+
+      // Jika kosong
+
+      if (data.length === 0) {
+
+
+        daftar.innerHTML =
+
+          '<div class="kosong">' +
+
+          'Belum ada orang tua yang mengambil nomor antrean.' +
+
+          '</div>';
+
+
+        return;
+
+      }
+
+
+
+      // Kosongkan daftar
+
+      daftar.innerHTML = "";
+
+
+
+      // Tampilkan data
+
+      data.forEach(
+
+        function(peserta) {
+
+
+          const item =
+
+            document.createElement(
+
+              "div"
+
+            );
+
+
+          item.className = "item";
+
+
+          item.innerHTML = `
+
+            <div class="nomor">
+
+              ${String(
+
+                peserta.nomor
+
+              ).padStart(3, "0")}
+
+            </div>
+
+
+            <div class="nama">
+
+              ${peserta.nama}
+
+              <div class="status">
+
+                Menunggu
+
+              </div>
+
+            </div>
+
+
+            <button
+
+              class="btn-panggil"
+
+              onclick="panggilNomor(
+
+                this,
+
+                ${peserta.nomor}
+
+              )"
+
+            >
+
+              PANGGIL
+
+            </button>
+
+          `;
+
+
+          daftar.appendChild(
+
+            item
+
+          );
+
+
+        }
+
+      );
+
+
+    }
+
+
+    catch (error) {
+
+
+      console.error(error);
+
+
+      daftar.innerHTML =
+
+        '<div class="kosong">' +
+
+        'Gagal mengambil data antrean.' +
+
+        '<br><br>' +
+
+        error.message +
+
+        '</div>';
+
+
+    }
+
+
+  }
+
+
+
+  // ==========================================
+  // PANGGIL NOMOR
+  // ==========================================
+
+
+  function panggilNomor(
+
+    tombol,
+
+    nomor
+
+  ) {
+
+
+    const item =
+
+      tombol.parentElement;
+
+
+    const status =
+
+      item.querySelector(
+
+        ".status"
+
+      );
+
+
+
+    // Ubah status
+
+    status.textContent =
+
+      "Sedang dipanggil";
+
+
+    // Ubah warna
+
+    item.classList.add(
+
+      "dipanggil"
+
+    );
+
+
+    // Ubah tombol
+
+    tombol.textContent =
+
+      "SELESAI";
+
+
+    tombol.className =
+
+      "btn-selesai";
+
+
+    // Fungsi tombol selesai
+
+    tombol.onclick =
+
+      function() {
+
+
+        selesaiNomor(
+
+          tombol,
+
+          nomor
+
+        );
+
+
+      };
+
+
+    // Pemberitahuan
+
+    alert(
+
+      "Memanggil nomor antrean " +
+
+      String(
+
+        nomor
+
+      ).padStart(
+
+        3,
+
+        "0"
+
+      )
+
+    );
+
+
+  }
+
+
+
+  // ==========================================
+  // SELESAIKAN ANTREAN
+  // ==========================================
+
+
+  function selesaiNomor(
+
+    tombol,
+
+    nomor
+
+  ) {
+
+
+    const item =
+
+      tombol.parentElement;
+
+
+    const status =
+
+      item.querySelector(
+
+        ".status"
+
+      );
+
+
+
+    status.textContent =
+
+      "Selesai";
+
+
+    item.classList.remove(
+
+      "dipanggil"
+
+    );
+
+
+    item.classList.add(
+
+      "selesai"
+
+    );
+
+
+    tombol.textContent =
+
+      "SELESAI";
+
+
+    tombol.disabled =
+
+      true;
+
+
+    alert(
+
+      "Nomor antrean " +
+
+      String(
+
+        nomor
+
+      ).padStart(
+
+        3,
+
+        "0"
+
+      ) +
+
+      " telah selesai."
+
+    );
+
+
+  }
+
+
+
+  // ==========================================
+  // JALANKAN OTOMATIS
+  // ==========================================
+
+
+  ambilData();
+
+
+</script>
+
+
+</body>
+
+</html>
