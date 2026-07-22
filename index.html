@@ -15,11 +15,13 @@
   <!-- SUPABASE -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+
   <style>
 
     * {
       box-sizing: border-box;
     }
+
 
     body {
 
@@ -34,6 +36,7 @@
       padding: 20px;
 
     }
+
 
     .container {
 
@@ -54,6 +57,7 @@
 
     }
 
+
     /* =========================
        HEADER
     ========================= */
@@ -72,6 +76,7 @@
 
     }
 
+
     .header h1 {
 
       margin: 0;
@@ -79,6 +84,7 @@
       font-size: 25px;
 
     }
+
 
     .header p {
 
@@ -90,6 +96,7 @@
 
     }
 
+
     /* =========================
        CONTENT
     ========================= */
@@ -99,6 +106,7 @@
       padding: 30px;
 
     }
+
 
     h2 {
 
@@ -111,6 +119,7 @@
       margin-bottom: 25px;
 
     }
+
 
     /* =========================
        INFO
@@ -138,6 +147,7 @@
 
     }
 
+
     .jumlah {
 
       font-size: 18px;
@@ -147,6 +157,7 @@
       color: #087443;
 
     }
+
 
     .refresh {
 
@@ -168,11 +179,13 @@
 
     }
 
+
     .refresh:hover {
 
       background: #065c35;
 
     }
+
 
     /* =========================
        DAFTAR ANTREAN
@@ -187,6 +200,7 @@
       gap: 12px;
 
     }
+
 
     .item {
 
@@ -206,6 +220,7 @@
 
     }
 
+
     .nomor {
 
       min-width: 65px;
@@ -217,6 +232,7 @@
       color: #087443;
 
     }
+
 
     .nama {
 
@@ -230,6 +246,7 @@
 
     }
 
+
     .status {
 
       margin-top: 5px;
@@ -241,6 +258,7 @@
       color: #777;
 
     }
+
 
     /* =========================
        BUTTON SELESAI
@@ -266,11 +284,13 @@
 
     }
 
+
     .btn-selesai:hover {
 
       background: #065c35;
 
     }
+
 
     /* =========================
        SELESAI
@@ -284,6 +304,7 @@
 
     }
 
+
     .item.selesai .status {
 
       color: #087443;
@@ -291,6 +312,7 @@
       font-weight: bold;
 
     }
+
 
     .btn-selesai:disabled {
 
@@ -301,6 +323,7 @@
       cursor: not-allowed;
 
     }
+
 
     /* =========================
        KOSONG / LOADING
@@ -316,6 +339,7 @@
 
     }
 
+
     /* =========================
        RESPONSIVE
     ========================= */
@@ -328,11 +352,13 @@
 
       }
 
+
       .item {
 
         flex-wrap: wrap;
 
       }
+
 
       .btn-selesai {
 
@@ -583,6 +609,20 @@
           item.className = "item";
 
 
+          // Cek status dari database
+
+          const sudahSelesai =
+
+            peserta.status === "selesai";
+
+
+          if (sudahSelesai) {
+
+            item.classList.add("selesai");
+
+          }
+
+
           item.innerHTML = `
 
             <div class="nomor">
@@ -602,7 +642,7 @@
 
               <div class="status">
 
-                Menunggu
+                ${sudahSelesai ? "Selesai" : "Menunggu"}
 
               </div>
 
@@ -620,6 +660,8 @@
                 ${peserta.nomor}
 
               )"
+
+              ${sudahSelesai ? "disabled" : ""}
 
             >
 
@@ -673,10 +715,11 @@
 
   // ==========================================
   // SELESAIKAN ANTREAN
+  // SIMPAN STATUS KE SUPABASE
   // ==========================================
 
 
-  function selesaiNomor(
+  async function selesaiNomor(
 
     tombol,
 
@@ -685,69 +728,146 @@
   ) {
 
 
-    const item =
+    // Cegah tombol diklik dua kali
 
-      tombol.parentElement;
+    tombol.disabled = true;
 
 
-    const status =
+    tombol.textContent =
 
-      item.querySelector(
+      "MENYIMPAN...";
 
-        ".status"
+
+    try {
+
+
+      // Update status di database
+
+      const {
+
+        error
+
+      } = await supabaseClient
+
+
+        .from("antrian")
+
+
+        .update({
+
+          status: "selesai"
+
+        })
+
+
+        .eq(
+
+          "nomor",
+
+          nomor
+
+        );
+
+
+      if (error) {
+
+        throw error;
+
+      }
+
+
+      // Jika berhasil, ubah tampilan
+
+      const item =
+
+        tombol.parentElement;
+
+
+      const status =
+
+        item.querySelector(
+
+          ".status"
+
+        );
+
+
+      status.textContent =
+
+        "Selesai";
+
+
+      item.classList.add(
+
+        "selesai"
 
       );
 
 
-    // Ubah status menjadi selesai
+      tombol.textContent =
 
-    status.textContent =
-
-      "Selesai";
+        "SELESAI";
 
 
-    // Ubah tampilan
+      tombol.disabled =
 
-    item.classList.add(
-
-      "selesai"
-
-    );
+        true;
 
 
-    // Matikan tombol
+      // Pemberitahuan
 
-    tombol.textContent =
+      alert(
 
-      "SELESAI";
+        "Nomor antrean " +
+
+        String(
+
+          nomor
+
+        ).padStart(
+
+          3,
+
+          "0"
+
+        ) +
+
+        " telah selesai."
+
+      );
 
 
-    tombol.disabled =
-
-      true;
+    }
 
 
-    // Pemberitahuan
+    catch (error) {
 
-    alert(
 
-      "Nomor antrean " +
+      console.error(error);
 
-      String(
 
-        nomor
+      // Kembalikan tombol
 
-      ).padStart(
+      tombol.textContent =
 
-        3,
+        "SELESAI";
 
-        "0"
 
-      ) +
+      tombol.disabled =
 
-      " telah selesai."
+        false;
 
-    );
+
+      alert(
+
+        "Gagal menyimpan status antrean.\n\n" +
+
+        error.message
+
+      );
+
+
+    }
 
 
   }
