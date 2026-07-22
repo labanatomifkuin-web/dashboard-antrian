@@ -555,7 +555,7 @@
       }
 
 
-      // Jumlah antrean
+      // Jumlah seluruh antrean
 
       document.getElementById(
 
@@ -566,7 +566,7 @@
         data.length;
 
 
-      // Jika kosong
+      // Jika tidak ada antrean
 
       if (data.length === 0) {
 
@@ -590,7 +590,7 @@
       daftar.innerHTML = "";
 
 
-      // Tampilkan data
+      // Tampilkan data antrean
 
       data.forEach(
 
@@ -609,16 +609,22 @@
           item.className = "item";
 
 
-          // Cek status dari database
+          // Cek status dari Supabase
 
           const sudahSelesai =
 
             peserta.status === "selesai";
 
 
+          // Jika sudah selesai
+
           if (sudahSelesai) {
 
-            item.classList.add("selesai");
+            item.classList.add(
+
+              "selesai"
+
+            );
 
           }
 
@@ -642,7 +648,11 @@
 
               <div class="status">
 
-                ${sudahSelesai ? "Selesai" : "Menunggu"}
+                ${
+                  sudahSelesai
+                    ? "Selesai"
+                    : "Menunggu"
+                }
 
               </div>
 
@@ -661,7 +671,12 @@
 
               )"
 
-              ${sudahSelesai ? "disabled" : ""}
+              ${
+                sudahSelesai
+                  ? "disabled"
+                  : ""
+
+              }
 
             >
 
@@ -728,7 +743,7 @@
   ) {
 
 
-    // Cegah tombol diklik dua kali
+    // Cegah klik dua kali
 
     tombol.disabled = true;
 
@@ -741,9 +756,11 @@
     try {
 
 
-      // Update status di database
+      // Update status di Supabase
 
       const {
+
+        data,
 
         error
 
@@ -766,12 +783,28 @@
 
           nomor
 
-        );
+        )
+
+
+        .select();
 
 
       if (error) {
 
         throw error;
+
+      }
+
+
+      // Pastikan ada data yang berhasil di-update
+
+      if (!data || data.length === 0) {
+
+        throw new Error(
+
+          "Status tidak berhasil disimpan. Periksa izin UPDATE pada Supabase (RLS)."
+
+        );
 
       }
 
@@ -846,7 +879,7 @@
       console.error(error);
 
 
-      // Kembalikan tombol
+      // Jika gagal, kembalikan tombol
 
       tombol.textContent =
 
